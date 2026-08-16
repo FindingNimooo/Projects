@@ -4,17 +4,6 @@
 //Grouped with Peter Estacio and Osh Ong
 // Section: ENGG 123.01 - J1
 
-
-// decode_riscv.cpp
-//
-// Simulates decoding of 32-bit RISC-V (RV32I) instructions.
-// Each instruction is entered by the user as an 8-character hex string.
-// The program decodes it into RISC-V assembly, or -- if it cannot be
-// fully decoded -- prints the opcode / funct7 / funct3 fields instead.
-//
-// Build:  g++ -std=c++17 -O2 -o decode_riscv decode_riscv.cpp
-// Run:    ./decode_riscv
-
 #include <iostream>
 #include <sstream>
 #include <string>
