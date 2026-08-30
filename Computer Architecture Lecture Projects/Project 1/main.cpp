@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cctype>
 #include <iomanip>
+#include <bitset>
 
 using namespace std;
 
@@ -342,6 +343,9 @@ int main() {
     bool ok = decodeInstruction(f);
     if (!ok) {
       cout << "Instruction could not be decoded." << endl;
+      cout << "opcode = " << bitset<7>(f.opcode) << ", ";
+      cout << "funct7 = " << bitset<7>(f.funct7) << ", ";
+      cout << "funct3 = " << bitset<3>(f.funct3); 
     }
   }
 
