@@ -152,6 +152,13 @@ Simulator::Instruction Simulator::decode(Instruction instruction)
     instruction.readsRs2 = true;
     instruction.writesRd = true;
   }
+  else if (opcode == 0x33 && funct3 == 0 && funct7 == 1)
+  {
+    instruction.operation = Operation::Multiply;
+    instruction.readsRs1 = true;
+    instruction.readsRs2 = true;
+    instruction.writesRd = true;
+  }
   else if (opcode == 0x03 && funct3 == 3)
   {
     instruction.operation = Operation::Load;
@@ -205,7 +212,6 @@ uint64_t Simulator::forwardedValue(unsigned source, uint64_t original) const
     return 0;
   }
 
-  // The newest producer has priority. A load's EX result is only its address.
   const Instruction& recent = exmem.instruction;
   if (recent.valid && recent.error.empty() && recent.writesRd &&
       recent.rd == source && recent.operation != Operation::Load)
@@ -237,7 +243,6 @@ void Simulator::instructionFetch(IFID& next)
   }
   else if (item == instructionMemory.end())
   {
-    // Keep fetch faults in the pipeline so an older taken branch can squash them.
     next.instruction.error = "No instruction loaded";
     fetchStopped = true;
   }
@@ -311,6 +316,11 @@ void Simulator::execute(EXMEM& next, bool& redirected, uint64_t& target) const
       next.result = operand1 - operand2;
       break;
     }
+    case Operation::Multiply:
+    {
+      next.result = operand1 * operand2;
+      break;
+    }
     case Operation::BranchLessUnsigned:
     {
       taken = operand1 < operand2;
@@ -378,7 +388,6 @@ void Simulator::memoryAccess(MEMWB& next)
   }
   else
   {
-    // Apart from loaddata, this is the only simulated data-memory write.
     item->second = exmem.storeValue;
   }
 }
@@ -422,9 +431,7 @@ void Simulator::executeCode(uint64_t address, std::ostream& output)
     EXMEM nextEXMEM;
     MEMWB nextMEMWB;
     std::string error;
-
-    // WB precedes ID reads, modeling a register file written before it is read.
-    // Every stage otherwise reads only the current pipeline registers.
+    
     if (writeBack(retired, error))
     {
       if (error.empty())
@@ -446,7 +453,6 @@ void Simulator::executeCode(uint64_t address, std::ostream& output)
 
     if (stopping)
     {
-      // Older WB has completed. Squash younger work before any younger store.
       fetchStopped = true;
     }
     else
@@ -456,7 +462,6 @@ void Simulator::executeCode(uint64_t address, std::ostream& output)
       execute(nextEXMEM, redirected, target);
       if (redirected)
       {
-        // Discard both younger instructions; fetch the target on the next cycle.
         pc = target;
         fetchStopped = false;
       }
@@ -466,7 +471,6 @@ void Simulator::executeCode(uint64_t address, std::ostream& output)
         instructionDecode(nextIDEX, stalled);
         if (stalled)
         {
-          // Freeze PC and IF/ID; the default next ID/EX is a bubble.
           nextIFID = ifid;
         }
         else

@@ -21,7 +21,7 @@ public:
 private:
   enum class Operation
   {
-    Invalid, AddImmediate, Add, Subtract, Load, Store,
+    Invalid, AddImmediate, Add, Subtract, Multiply, Load, Store,
     BranchLessUnsigned, BranchGreaterEqualUnsigned, Jump, Break
   };
 
